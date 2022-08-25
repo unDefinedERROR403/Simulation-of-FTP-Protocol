@@ -1,0 +1,213 @@
+#include "headers.h"
+#define CLEAR(x) memset(x,'\0', MAXLINE)
+
+char buff[MAXLINE], file[1024], buffer[5000], temp[100], text[1024];
+int client_socket, msg_socket;
+char message[2][100];
+
+int main(int argc, char const *argv[]) {
+	
+	int login = 0,i;
+	char namedPipe[50];
+	
+	system("clear");
+	printf("--------------------------\n");
+	printf("----------CLIENT----------\n");
+	printf("--------------------------\n\n\n");
+	
+	if(argc != 2) {
+		printf("Enter IP address\n");
+	}
+	
+	int sd;
+	struct sockaddr_in server_address;
+		
+	
+	if((client_socket = socket(AF_INET, SOCK_STREAM, 0))<0) {
+		printf("Connection failed\n");
+		exit(1);
+	}
+	
+	memset(&server_address, '\0', sizeof(server_address));
+	server_address.sin_family = AF_INET;
+	server_address.sin_port = htons(PORT);
+    server_address.sin_addr.s_addr = inet_addr(argv[1]);
+
+	if((sd = connect(client_socket, (struct sockaddr*)&server_address, sizeof(server_address))) <0) {
+		printf("Connection failed\n");
+		exit(1);
+	}
+	
+	//system("clear");
+	printf("Connected to server\n\n");
+	printf("Client Socket is created.\n");
+	printf("Connected to File Transfer server.\n\n");
+	
+	while(login == 0) {
+		printf("Username: ");
+		fgets(buffer, MAXLINE, stdin);
+		printf("Password: ");
+		fgets(text, MAXLINE, stdin);
+		text[strlen(text)] = '\0';
+		strcat(buffer,text);
+		send(client_socket,buffer,MAXLINE,0);
+	
+		recv(client_socket, buffer, MAXLINE, 0);
+		if(strcmp(buffer,"0")==0){
+			printf("User Logged In\n\n");
+			login = 1;
+		}
+
+		bzero(buffer, MAXLINE);
+		CLEAR(buffer);
+	}
+	printf("\n");
+	while(1) {
+		i=0;
+		recv(client_socket, buffer, MAXLINE, 0);
+		printf("%s\n\n", buffer);
+		bzero(buffer, MAXLINE);
+		CLEAR(buffer);
+		
+		printf(">>");
+		fgets(buffer, MAXLINE, stdin);
+		
+		char* token = strtok(buffer, " ");
+		while(token != NULL){
+			strcpy(message[i], token);
+			token = strtok(NULL, " ");
+			i++;
+		}
+		
+		if((strcmp(message[0],"user")==0) || (strcmp(message[0],"USER")==0)){
+			bzero(buffer, sizeof(buffer));
+			strcat(buffer,"1 ");
+			//printf("Username: ");
+			//fgets(text, MAXLINE, stdin);
+			//text[strlen(text)] = '\0';
+			strcat(buffer,message[1]);
+			send(client_socket,buffer,MAXLINE,0);
+			bzero(buffer, MAXLINE);
+		}
+		
+		if((strcmp(message[0],"pass")==0) || (strcmp(message[0],"PASS")==0)){
+			bzero(buffer, sizeof(buffer));
+			strcat(buffer,"2 ");
+			//printf("Password: ");
+			//fgets(text, MAXLINE, stdin);
+			//text[strlen(text)] = '\0';
+			strcat(buffer,message[1]);
+			send(client_socket,buffer,MAXLINE,0);
+			bzero(buffer, MAXLINE);
+		}
+		
+		if((strcmp(message[0],"mkd")==0) || (strcmp(message[0],"MKD")==0)){
+			bzero(buffer, sizeof(buffer));
+			strcat(buffer,"3 ");
+			strcat(buffer,message[1]);
+			send(client_socket,buffer,MAXLINE,0);
+			bzero(buffer, MAXLINE);
+		}
+		
+		if((strcmp(message[0],"cwd")==0) || (strcmp(message[0],"CWD")==0)){
+			bzero(buffer, sizeof(buffer));
+			strcat(buffer,"4 ");
+			strcat(buffer,message[1]);
+			send(client_socket,buffer,MAXLINE,0);
+			bzero(buffer, MAXLINE);
+		}
+		
+		if((strcmp(message[0],"rmd")==0) || (strcmp(message[0],"RMD")==0)){
+			bzero(buffer, sizeof(buffer));
+			strcat(buffer,"5 ");
+			strcat(buffer,message[1]);
+			send(client_socket,buffer,MAXLINE,0);
+			bzero(buffer, MAXLINE);
+		}
+		
+		if((strcmp(buffer,"pwd\n")==0) || (strcmp(buffer,"PWD\n")==0)){
+			bzero(buffer, sizeof(buffer));
+			strcat(buffer,"6 ");
+			strcat(buffer,message[0]);
+			send(client_socket,buffer,MAXLINE,0);
+			bzero(buffer, MAXLINE);
+		}
+		
+		if((strcmp(buffer,"list\n")==0) || (strcmp(buffer,"LIST\n")==0)){
+			bzero(buffer, sizeof(buffer));
+			strcat(buffer,"9 ");
+			strcat(buffer,message[1]);
+			send(client_socket,buffer,MAXLINE,0);
+			bzero(buffer, MAXLINE);
+		}
+		
+		if((strcmp(buffer,"rein\n")==0) || (strcmp(buffer,"REIN\n")==0)){
+			bzero(buffer, sizeof(buffer));
+			strcat(buffer,"11 ");
+			send(client_socket,buffer,MAXLINE,0);
+			bzero(buffer, MAXLINE);
+			printf("closed\n");
+			close(client_socket);
+			exit(1);
+		}
+		
+		if((strcmp(buffer,"abor\n")==0) || (strcmp(buffer,"ABOR\n")==0)){
+			bzero(buffer, sizeof(buffer));
+			strcat(buffer,"10 ");
+			send(client_socket,buffer,MAXLINE,0);
+			bzero(buffer, MAXLINE);
+		}
+		
+		if((strcmp(message[0],"dele")==0) || (strcmp(message[0],"DELE")==0)){
+			bzero(buffer, sizeof(buffer));
+			strcat(buffer,"12 ");
+			strcat(buffer,message[1]);
+			send(client_socket,buffer,MAXLINE,0);
+			bzero(buffer, MAXLINE);
+		}
+		
+		if((strcmp(buffer,"cdup\n")==0) || (strcmp(buffer,"CDUP\n")==0)){
+			bzero(buffer, sizeof(buffer));
+			strcat(buffer,"13 ");
+			strcat(buffer,message[0]);
+			send(client_socket,buffer,MAXLINE,0);
+			bzero(buffer, MAXLINE);
+		}
+		
+		if((strcmp(buffer,"quit\n")==0) || (strcmp(buffer,"QUIT\n")==0)){
+			bzero(buffer, sizeof(buffer));
+			strcat(buffer,"14 ");
+			send(client_socket,buffer,MAXLINE,0);
+			bzero(buffer, MAXLINE);
+			printf("Server and Client both closed\n");
+			close(client_socket);
+			exit(1);
+		}
+		
+		if((strcmp(message[0],"port")==0) || (strcmp(message[0],"PORT")==0)){
+			bzero(buffer, sizeof(buffer));
+			strcat(buffer,"15 ");
+			strcat(buffer,message[1]);
+			send(client_socket,buffer,MAXLINE,0);
+			bzero(buffer, MAXLINE);
+		}
+		
+		if((strcmp(message[0],"rnfr")==0) || (strcmp(message[0],"RNFR")==0)){
+			bzero(buffer, sizeof(buffer));
+			strcat(buffer,"16 ");
+			strcat(buffer,message[1]);
+			send(client_socket,buffer,MAXLINE,0);
+			bzero(buffer, MAXLINE);
+		}
+		
+		if((strcmp(message[0],"rnto")==0) || (strcmp(message[0],"RNTO")==0)){
+			bzero(buffer, sizeof(buffer));
+			strcat(buffer,"17 ");
+			strcat(buffer,message[1]);
+			send(client_socket,buffer,MAXLINE,0);
+			bzero(buffer, MAXLINE);
+		}
+	}
+	
+	return(0);
+}
