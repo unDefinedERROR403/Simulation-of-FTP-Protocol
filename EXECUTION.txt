@@ -1,0 +1,12 @@
+SERVER:
+
+gcc servermain.c -o servermain
+./servermain
+
+CLIENT:
+
+gcc clientmain.c -o clientmain
+./clientmain 127.0.0.1
+
+Username: user
+Password: pass
