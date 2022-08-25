@@ -1,0 +1,3 @@
+#include "headers.h"
+
+char password[2][100] = {"pass","PASS"};
